@@ -1,0 +1,78 @@
+# Sobe o site e o job que mantém a lista em dia.
+#
+#   docker compose up -d --build
+#   curl localhost:8080/saude
+#
+# Para o link fixo acessível de fora, veja docs/deploy.md.
+services:
+  site:
+    build: .
+    # always, e não unless-stopped: depois de uma queda de luz o container tem
+    # de voltar mesmo que tenha sido parado antes do desligamento.
+    restart: always
+    ports:
+      - "${PORTA:-8080}:8080"
+    volumes:
+      - dados:/dados:ro
+    networks:
+      - publica
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Teto de recursos: um pico de acessos não pode derrubar o resto do servidor.
+    mem_limit: 128m
+    pids_limit: 64
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/saude"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+  sincronizacao:
+    build:
+      context: .
+      dockerfile: Dockerfile.sync
+    restart: always
+    environment:
+      INTERVALO: "${INTERVALO:-600}"
+      PLANILHA_ID: "${PLANILHA_ID:-1OyoE2ybG9Mcjuw8n4QjfGufPgu1kUjnGYU7Vf1gKopU}"
+      PLANILHA_GID: "${PLANILHA_GID:-0}"
+      MINIMO_EMBAIXADORES: "${MINIMO_EMBAIXADORES:-10}"
+    volumes:
+      - dados:/dados
+    # Rede própria: não enxerga o site nem recebe conexão de fora, só faz a
+    # saída para o Google Sheets.
+    networks:
+      - saida
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 128m
+    pids_limit: 32
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  publica:
+  saida:
+
+volumes:
+  dados:

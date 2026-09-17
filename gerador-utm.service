@@ -1,0 +1,30 @@
+# Sobe o site no boot, sem depender de ninguém logar na máquina.
+#
+#   sudo cp gerador-utm.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now gerador-utm
+#
+# Troque WorkingDirectory pelo caminho real do projeto no servidor.
+[Unit]
+Description=Gerador de rastreamento de link Sympla
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/gerador-utm
+# Com túnel: troque a linha abaixo por
+#   ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --remove-orphans
+# O instalador faz isso sozinho quando encontra TUNNEL_TOKEN no .env.
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose down
+# Depois de queda de luz o relógio e a rede podem demorar: tenta de novo em vez
+# de desistir na primeira falha.
+Restart=on-failure
+RestartSec=20s
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

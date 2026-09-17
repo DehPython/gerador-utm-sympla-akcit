@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de rastreamento de link Sympla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="alerta" id="alerta" role="alert" aria-live="assertive" hidden>
+  <span class="alerta-marca" aria-hidden="true">!</span>
+  <span class="alerta-texto" id="alerta-texto"></span>
+  <button type="button" class="alerta-fechar" id="alerta-fechar" aria-label="Fechar aviso">×</button>
+</div>
+
+<main class="env">
+
+<section id="tela-selecao">
+
+  <header class="abertura">
+    <h1>Gerador de rastreamento de link Sympla</h1>
+    <p>Cole o link do evento no Sympla e marque quem vai divulgar. Cada pessoa recebe um link
+       próprio, e o painel do Sympla mostra quantas inscrições vieram de cada uma.</p>
+
+    <div class="campos">
+      <div>
+        <label class="campo" for="base">LINK DO EVENTO NO SYMPLA</label>
+        <input id="base" type="url" inputmode="url" spellcheck="false"
+               placeholder="https://www.sympla.com.br/evento/nome-do-evento/1234567">
+      </div>
+    </div>
+  </header>
+
+  <div class="barra">
+    <span class="contagem" id="contagem"></span>
+    <input class="busca" id="busca" type="search" placeholder="Filtrar por nome, UF, hub" aria-label="Filtrar pessoas">
+    <button id="alternar">MARCAR TODOS</button>
+    <button class="forte" id="gerar">GERAR LINKS</button>
+  </div>
+
+  <div id="lista"></div>
+
+  <details class="avulso">
+    <summary>
+      <span class="mais">+</span>
+      <span>
+        <span class="titulo">Criar um link para qualquer origem</span><br>
+        <span class="sub">Uma palestra, um parceiro, uma newsletter, alguém de fora da lista</span>
+      </span>
+    </summary>
+    <div class="caixa">
+      <div>
+        <label class="campo" for="a-origem">ORIGEM <span class="obrigatorio" aria-hidden="true">*</span>
+          <button type="button" class="ajuda" data-dica="Quem ou o que leva a pessoa até o evento. Pode ser gente (ana_lima), mas também uma palestra (palestra_unicamp), um parceiro (sebrae_rn) ou uma newsletter. É por este campo que o painel separa um divulgador do outro, então use um valor diferente para cada um." aria-label="Quem ou o que leva a pessoa até o evento. Pode ser gente (ana_lima), mas também uma palestra (palestra_unicamp), um parceiro (sebrae_rn) ou uma newsletter. É por este campo que o painel separa um divulgador do outro, então use um valor diferente para cada um.">?</button>
+        </label>
+        <input id="a-origem" type="text" placeholder="palestra_unicamp" spellcheck="false">
+      </div>
+      <div>
+        <label class="campo" for="a-canal">CANAL <span class="obrigatorio" aria-hidden="true">*</span>
+          <button type="button" class="ajuda" data-dica="Por onde a pessoa chegou até o link. Nos embaixadores usamos a UF (go, sp). Fora disso, descreva o meio: evento_presencial, email, whatsapp, podcast. Serve para somar tudo que veio pelo mesmo caminho." aria-label="Por onde a pessoa chegou até o link. Nos embaixadores usamos a UF (go, sp). Fora disso, descreva o meio: evento_presencial, email, whatsapp, podcast. Serve para somar tudo que veio pelo mesmo caminho.">?</button>
+        </label>
+        <input id="a-canal" type="text" placeholder="evento_presencial" spellcheck="false">
+      </div>
+      <div>
+        <label class="campo" for="a-campanha">CAMPANHA <span class="obrigatorio" aria-hidden="true">*</span>
+          <button type="button" class="ajuda" data-dica="A ação que junta vários links. Fica igual em todos os links da mesma ação: embaixadores, palestras_2026, parcerias. É o agrupamento mais largo do relatório." aria-label="A ação que junta vários links. Fica igual em todos os links da mesma ação: embaixadores, palestras_2026, parcerias. É o agrupamento mais largo do relatório.">?</button>
+        </label>
+        <input id="a-campanha" type="text" placeholder="palestras_2026" spellcheck="false">
+      </div>
+      <div>
+        <label class="campo" for="a-detalhe">DETALHE <span class="opcional">opcional</span>
+          <button type="button" class="ajuda" data-dica="Separa dois links da mesma ação. Numa palestra pode ser qr_code_slide e link_chat; nos embaixadores é o hub. Deixe em branco se houver um link só." aria-label="Separa dois links da mesma ação. Numa palestra pode ser qr_code_slide e link_chat; nos embaixadores é o hub. Deixe em branco se houver um link só.">?</button>
+        </label>
+        <input id="a-detalhe" type="text" placeholder="qr_code_slide" spellcheck="false">
+      </div>
+      <div>
+        <label class="campo" for="a-termo">TERMO <span class="opcional">opcional</span>
+          <button type="button" class="ajuda" data-dica="Só para anúncio pago de busca: a palavra que você comprou. Fora desse caso, deixe em branco." aria-label="Só para anúncio pago de busca: a palavra que você comprou. Fora desse caso, deixe em branco.">?</button>
+        </label>
+        <input id="a-termo" type="text" placeholder="curso_ia" spellcheck="false">
+      </div>
+      <div class="acoes"><button type="button" id="a-gerar">GERAR LINK</button></div>
+      <div class="largo" id="a-saida"></div>
+    </div>
+  </details>
+
+</section>
+
+<section id="tela-links" hidden>
+
+  <div class="volta">
+    <button type="button" id="voltar">← ESCOLHER OUTRAS PESSOAS</button>
+    <span class="resumo-topo" id="resumo-topo"></span>
+    <button type="button" id="copiar-planilha">COPIAR TUDO PARA PLANILHA</button>
+  </div>
+
+  <div id="resultado"></div>
+
+</section>
+
+</main>
+
+<script type="module" src="./src/app.js"></script>
+</body>
+</html>

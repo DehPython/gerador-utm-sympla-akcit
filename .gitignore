@@ -1,0 +1,7 @@
+# A planilha e o PDF trazem e-mail, celular e LinkedIn dos embaixadores. A lista
+# que o app usa vem da sincronização e só tem nome, UF, município e hub, então
+# não há motivo para guardar os contatos aqui.
+docs/documentacao/
+
+# Variáveis do servidor, incluindo a chave do Tailscale.
+.env

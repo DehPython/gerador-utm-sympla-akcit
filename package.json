@@ -1,0 +1,15 @@
+{
+  "name": "gerador-utm-sympla-akcit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Gera links rastreáveis do Sympla em lote para a rede de embaixadores",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "dev": "node scripts/servidor.js",
+    "serve": "node scripts/servidor.js",
+    "sincronizar": "node scripts/sincronizar.js",
+    "sincronizar:conferir": "node scripts/sincronizar.js --conferir",
+    "sincronizar:job": "sh scripts/sincronizar-sempre.sh"
+  }
+}

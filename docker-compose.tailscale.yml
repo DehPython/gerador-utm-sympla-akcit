@@ -1,0 +1,50 @@
+# Publica o site num endereço fixo com HTTPS, sem domínio próprio:
+#
+#   https://lk-xoxf7ib5.SUA-TAILNET.ts.net
+#
+#   TS_AUTHKEY=tskey-auth-... docker compose \
+#     -f docker-compose.yml -f docker-compose.tailscale.yml up -d
+#
+# "AllowFunnel": true no tailscale-serve.json deixa o endereço aberto na
+# internet: qualquer pessoa com o link entra, sem precisar de Tailscale.
+# Trocar para false restringe de novo a quem está na tailnet.
+services:
+  site:
+    # A porta deixa de ser publicada no host: quem alcança o site é o Tailscale.
+    ports: !reset []
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    restart: always
+    # Vira o nome no endereço: lk-xoxf7ib5.SUA-TAILNET.ts.net
+    #
+    # Nome sorteado de propósito. Ao emitir o certificado HTTPS, o Tailscale
+    # publica este nome nos logs de Certificate Transparency, que são públicos e
+    # permanentes. Um nome como "gerador-utm" entregaria o que roda aqui para
+    # quem varre esses logs; este não diz nada.
+    hostname: lk-xoxf7ib5
+    environment:
+      TS_AUTHKEY: "${TS_AUTHKEY:?defina TS_AUTHKEY no .env}"
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+      # Sem TUN: dispensa privilégio de rede no host.
+      TS_USERSPACE: "true"
+    volumes:
+      - tailscale:/var/lib/tailscale
+      - ./tailscale-serve.json:/config/serve.json:ro
+    networks:
+      - publica
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 64
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - site
+
+volumes:
+  tailscale:
