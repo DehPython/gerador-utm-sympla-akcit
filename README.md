@@ -70,8 +70,12 @@ Abra `docker-compose.tailscale.yml` e veja a linha `hostname:`. Ela define o
 endereço final:
 
 ```
-https://SEU-HOSTNAME.SUA-TAILNET.ts.net
+https://HOSTNAME.TAILNET.ts.net
 ```
+
+As três partes importam: o `hostname` que você escolheu aqui, o nome da sua
+tailnet, e `ts.net`. Esquecer a do meio é o engano mais comum e devolve
+`Could not resolve host`.
 
 Duas regras que evitam dor de cabeça:
 
@@ -107,14 +111,27 @@ docker compose -f docker-compose.yml -f docker-compose.tailscale.yml up -d --bui
 docker compose -f docker-compose.yml -f docker-compose.tailscale.yml logs tailscale --tail 20
 ```
 
-Procure por `Hostinfo.IngressEnabled changed to true` e pelo endereço nos logs.
-O certificado leva de 30 segundos a 2 minutos para sair; a primeira resposta
-pode falhar antes disso.
+Procure por `Hostinfo.IngressEnabled changed to true`. O certificado leva de 30
+segundos a 2 minutos para sair; a primeira resposta pode falhar antes disso.
 
-Teste:
+Para descobrir o endereço completo sem errar, pergunte ao próprio container:
 
 ```bash
-curl https://SEU-HOSTNAME.SUA-TAILNET.ts.net/saude
+docker compose -f docker-compose.yml -f docker-compose.tailscale.yml \
+  exec tailscale tailscale status --json | grep -o '"DNSName":"[^"]*"' | head -1
+```
+
+Ele tem três partes, e esquecer a do meio é o engano mais comum:
+
+```
+acs-xoxf7ib5 . tail4b04b3 . ts.net
+└─ hostname ┘ └─ tailnet ┘
+```
+
+Teste, trocando pelo endereço que o comando acima devolveu:
+
+```bash
+curl https://SEU-ENDERECO-COMPLETO/saude      # deve responder: ok
 ```
 
 ### 9. Fazer subir sozinho depois de reiniciar
@@ -133,7 +150,7 @@ aplicou.
 sudo reboot
 # espere a máquina voltar, então:
 systemctl status gerador-utm
-curl https://SEU-HOSTNAME.SUA-TAILNET.ts.net/saude
+curl https://SEU-ENDERECO-COMPLETO/saude
 ```
 
 Esse é o teste que importa: se responder depois do reboot, uma queda de luz não
@@ -147,6 +164,8 @@ derruba o serviço.
 | Endereço `.ts.net` não abre | `docker compose logs tailscale --tail 30` |
 | Abre só para quem tem Tailscale | falta o `nodeAttrs` do passo 7 |
 | Endereço ganhou sufixo `-1` | o nome já estava em uso; veja o passo 6 |
+| `Could not resolve host` | faltou a parte da tailnet no meio do endereço |
+| `permission denied ... docker.sock` | use `sudo`, ou `sudo usermod -aG docker $USER` |
 | Lista desatualizada | `docker compose logs sincronizacao --tail 20` |
 
 ## Windows
