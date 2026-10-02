@@ -98,11 +98,15 @@ acrescente este bloco antes da última chave `}` e clique em **Save**:
 
 ```json
 	"nodeAttrs": [
-		{"target": ["autogroup:member"], "attr": ["funnel"]},
+		{"target": ["*"], "attr": ["funnel"]},
 	],
 ```
 
-Sem ele o Funnel não liga, e o endereço só responde para quem tem Tailscale.
+Sem esse bloco o endereço só responde para quem tem Tailscale instalado.
+
+O `"*"` alcança qualquer nó da tailnet. Se você restringir a
+`autogroup:member`, um nó autenticado por auth key com **Tags** fica de fora,
+porque vira um tagged device e deixa de pertencer ao grupo.
 
 ### 8. Subir com o endereço público
 
@@ -128,11 +132,24 @@ acs-xoxf7ib5 . tail4b04b3 . ts.net
 └─ hostname ┘ └─ tailnet ┘
 ```
 
-Teste, trocando pelo endereço que o comando acima devolveu:
+Confirme que o endereço foi publicado no DNS público. Este é o teste que
+importa, porque quem abre o link não está na sua tailnet:
+
+```bash
+dig +short SEU-ENDERECO-COMPLETO @1.1.1.1
+```
+
+Tem que devolver dois IPs (`199.38.x.x` e `209.177.x.x`, os pontos de entrada
+do Funnel). Resposta vazia quer dizer que o nome não foi publicado: reveja o
+`nodeAttrs` do passo 7 e reinicie o container do Tailscale.
 
 ```bash
 curl https://SEU-ENDERECO-COMPLETO/saude      # deve responder: ok
 ```
+
+Rodar esse `curl` de uma máquina que tem Tailscale não serve de prova: ela
+resolve o nome por dentro da tailnet (`100.x.x.x`) e responde mesmo com o
+Funnel desligado. Confie no `dig`, ou teste de um aparelho sem Tailscale.
 
 ### 9. Fazer subir sozinho depois de reiniciar
 
@@ -163,6 +180,7 @@ derruba o serviço.
 | `curl localhost:8080/saude` não responde | `docker compose logs site --tail 20` |
 | Endereço `.ts.net` não abre | `docker compose logs tailscale --tail 30` |
 | Abre só para quem tem Tailscale | falta o `nodeAttrs` do passo 7 |
+| `dig` vazio, mas `tailscale funnel status` diz "on" | o `funnel status` mostra o pedido do container, não o que a Tailscale publicou; falta a permissão do passo 7 |
 | Endereço ganhou sufixo `-1` | o nome já estava em uso; veja o passo 6 |
 | `Could not resolve host` | faltou a parte da tailnet no meio do endereço |
 | `permission denied ... docker.sock` | use `sudo`, ou `sudo usermod -aG docker $USER` |
